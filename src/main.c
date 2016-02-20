@@ -1263,8 +1263,8 @@ void draw_cutscene(BITMAP *bmp, int org_level, int _level, int _lives, int _star
 // shows the scoring sequence at end of level
 void show_cutscene(int level) {
 	int x = -160;
-	BITMAP *bmp = create_bitmap(160, 120);
-	BITMAP *swap2 = create_bitmap(160, 120);
+	BITMAP *bmp = create_bitmap_ex(8, 160, 120);
+	BITMAP *swap2 = create_bitmap_ex(8, 160, 120);
 	int mode = 0;
 	int my_counter = 0;
 
@@ -1398,7 +1398,7 @@ void show_scores(int space, Thisc *table) {
 
 // draws the level selector
 void draw_select_starting_level(BITMAP *bmp, int level, int min, int max) {
-	BITMAP *stuff = create_bitmap(40, 10);
+	BITMAP *stuff = create_bitmap_ex(8, 40, 10);
 	char buf[80];
 	int xpos = 2;
 
@@ -2532,7 +2532,7 @@ void switch_gfx_mode(int mode, int w, int h) {
 // used for getting highscore names
 int get_string(BITMAP *bmp, char *string, int max_size, FONT *f, int pos_x, int pos_y, int colour, Tcontrol *pad) {
     int i = 0, c;
-    BITMAP *block = create_bitmap(text_length(f, "w")*max_size + 2, text_height(f) + 2);
+    BITMAP *block = create_bitmap_ex(8, text_length(f, "w")*max_size + 2, text_height(f) + 2);
 	char letters[] = "_abcdefghijklmnopqrstuvwxyz {}";
 	int current_letter = 0;
 	int max_letter = strlen(letters) - 1;

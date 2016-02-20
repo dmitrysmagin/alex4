@@ -590,8 +590,8 @@ int run_script(char *script, DATAFILE *d) {
 	for(i = 0; i < MAX_SCRIPT_SOUNDS; i ++) active_sounds[i] = -1;
 
 	// create gfx buffers
-    swap_buffer = create_bitmap(160, 120);
-	buffer = create_bitmap(160, 120);
+    swap_buffer = create_bitmap_ex(8, 160, 120);
+	buffer = create_bitmap_ex(8, 160, 120);
 
     script_done = FALSE;
     

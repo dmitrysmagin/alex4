@@ -1329,7 +1329,7 @@ int s_generate_explosions() {
 	unsigned char c;
 	BITMAP *tmp;
 
-	tmp = create_bitmap(32, 32);
+	tmp = create_bitmap_ex(8, 32, 32);
 	if (tmp == NULL) return -1;
 	clear(tmp);
 
@@ -1337,7 +1337,7 @@ int s_generate_explosions() {
 	circlefill(tmp, 15, 15, 10, 31);
 
 	for(i = 0; i < 32; i ++) {
-		s_expl_frame[i] = create_bitmap(32, 32);
+		s_expl_frame[i] = create_bitmap_ex(8, 32, 32);
 		if (!s_expl_frame[i]) return -1;
 
 		// draw new circles in the first third
@@ -1410,7 +1410,7 @@ int s_init_shooter() {
 
 	// getting memory for buffer
 	log2file(" reserving buffer memory");
-	s_buffer = create_bitmap(160, 120);
+	s_buffer = create_bitmap_ex(8, 160, 120);
 	if (!s_buffer) {
 		log2file(" *** failed");
 		return -1;
