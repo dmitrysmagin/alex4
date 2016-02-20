@@ -69,6 +69,7 @@ int game_status = 0;
 DATAFILE *data = NULL;
 DATAFILE *maps = NULL;
 DATAFILE *sfx_data = NULL;
+BITMAP *tmp_screen; // used for color conversion
 BITMAP *swap_screen;
 PALETTE org_pal;
 Tscroller hscroll;
@@ -494,7 +495,8 @@ void load_level_files(const char *filename) {
 void blit_to_screen(BITMAP *bmp) {
 	acquire_screen();
 	if (options.use_vsync) vsync();
-	stretch_blit(bmp, screen, 0, 0, bmp->w, bmp->h, 0, 0, SCREEN_W, SCREEN_H);
+	blit(bmp, tmp_screen, 0, 0, 0, 0, SCREEN_W, SCREEN_H);
+	stretch_blit(tmp_screen, screen, 0, 0, tmp_screen->w, tmp_screen->h, 0, 0, SCREEN_W, SCREEN_H);
 	release_screen();
 }
 
@@ -644,10 +646,12 @@ int init_game(const char *map_file) {
 	bpp = 16;
 	log2file(" setting color depth (%d)", bpp);
 	set_color_depth(bpp);
-	
+	set_color_conversion(COLORCONV_NONE);
+
 	// allocating memory 
 	log2file(" allocating memory for off screen buffers");
-	swap_screen = create_bitmap(160, 120);
+	tmp_screen = create_bitmap(160, 120);
+	swap_screen = create_bitmap_ex(8, 160, 120);
 	if (swap_screen == NULL) {
 		log2file("  *** failed");
 		allegro_message("ALEX4:\nFailed to allocate memory for swap screen.");
