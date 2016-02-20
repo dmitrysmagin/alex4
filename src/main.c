@@ -1007,6 +1007,8 @@ void uninit_game() {
 		if (pf) {
 			save_options(&options, pf);
 			pack_fclose(pf);
+		} else {
+			log2file("Error saving alex4.sav");
 		}
 		
 		log2file(" saving highscores");
@@ -1015,6 +1017,8 @@ void uninit_game() {
 			save_hisc_table(hisc_table, pf);
 			save_hisc_table(hisc_table_space, pf);
 			pack_fclose(pf);
+		} else {
+			log2file("Error saving alex4.hi");
 		}
 	}
 
