@@ -41,6 +41,14 @@
 
 #include "../data/data.h"
 
+// in case we are not on Windows
+#ifndef DIGI_DIRECTX
+#define DIGI_DIRECTX(A) DIGI_AUTODETECT
+#endif
+
+#ifndef DIGI_DIRECTAMX
+#define DIGI_DIRECTAMX(A) DIGI_AUTODETECT
+#endif
 
 // some game status defines
 #define GS_OK				1
