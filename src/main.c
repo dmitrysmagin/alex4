@@ -625,7 +625,7 @@ int init_game(const char *map_file) {
 	PACKFILE *pf;
 	BITMAP *bmp;
 	int i;
-	int w, h;
+	int w, h, bpp;
 
 	log2file("\nInit routines:");
 
@@ -640,9 +640,10 @@ int init_game(const char *map_file) {
 	log2file(" installing timers");
 	install_timers();
 
-	// set color depth to 8bpp
-	log2file(" setting color depth (8)");
-	set_color_depth(8);
+	// set color depth
+	bpp = 16;
+	log2file(" setting color depth (%d)", bpp);
+	set_color_depth(bpp);
 	
 	// allocating memory 
 	log2file(" allocating memory for off screen buffers");
@@ -685,6 +686,7 @@ int init_game(const char *map_file) {
     if (set_gfx_mode(
 		(get_config_int("graphics", "fullscreen", 0) ? GFX_AUTODETECT_FULLSCREEN : GFX_AUTODETECT_WINDOWED),
 		w, h, 0, 0)) {
+		allegro_message("ERROR: %s\n", allegro_error);
 		log2file("  *** failed");
 		log2file(" entering gfx mode (640x480 windowed)");
 		if (set_gfx_mode(GFX_AUTODETECT_WINDOWED, 640, 480, 0, 0)) {
