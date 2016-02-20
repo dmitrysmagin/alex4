@@ -17,8 +17,10 @@
  *    http://www.gnu.org for license information.             *
  **************************************************************/
  
- 
- 
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <errno.h>
 #include <allegro.h>
 #include <aldumb.h>
 #include <string.h>
@@ -64,6 +66,14 @@
 
 int game_status = 0;
 
+char alex4_sav[256] = "./alex4.sav";
+char alex4_hi[256] = "./alex4.hi";
+
+#ifndef WIN32
+char log_txt[256] = "/tmp/log.txt";
+#else
+char log_txt[256] = "./log.txt";
+#endif
 
 // globalez
 DATAFILE *data = NULL;
@@ -165,7 +175,7 @@ void log2file(char *format, ...) {
 	va_list ptr; /* get an arg pointer */
  	FILE *fp;
 	
-	fp = fopen("log.txt", "at");
+	fp = fopen(log_txt, "at");
 	if (fp) {
 		/* initialize ptr to point to the first argument after the format string */
 		va_start(ptr, format);
@@ -622,12 +632,30 @@ void fix_gui_colors() {
 	gui_bg_color = 254;
 }
 
+void init_paths() {
+#ifndef WIN32
+	char homedir[256];
+	char *home = getenv("HOME");
+	if (home) {
+		sprintf(homedir, "%s/.alex4", home);
+		mkdir(homedir, 0777);
+		if (errno == -1)
+			return;
+
+		sprintf(alex4_sav, "%s/alex4.sav", homedir);
+		sprintf(alex4_hi, "%s/alex4.hi", homedir);
+	}
+#endif
+}
+
 // init the game
 int init_game(const char *map_file) {
 	PACKFILE *pf;
 	BITMAP *bmp;
 	int i;
 	int w, h, bpp;
+
+	init_paths();
 
 	log2file("\nInit routines:");
 
@@ -742,7 +770,7 @@ int init_game(const char *map_file) {
 
 	// load options
 	log2file(" loading options");
-	pf = pack_fopen("alex4.sav", "rp");
+	pf = pack_fopen(alex4_sav, "rp");
 	if (pf) {
 		load_options(&options, pf);
 		pack_fclose(pf);
@@ -754,7 +782,7 @@ int init_game(const char *map_file) {
 
 	// loading highscores
 	log2file(" loading hiscores");
-	pf = pack_fopen("alex4.hi", "rp");
+	pf = pack_fopen(alex4_hi, "rp");
 	if (pf) {
 		load_hisc_table(hisc_table, pf);
 		load_hisc_table(hisc_table_space, pf);
@@ -1003,7 +1031,7 @@ void uninit_game() {
 	// only save if everything was inited ok!
 	if (init_ok) {
 		log2file(" saving options");
-		pf = pack_fopen("alex4.sav", "wp");
+		pf = pack_fopen(alex4_sav, "wp");
 		if (pf) {
 			save_options(&options, pf);
 			pack_fclose(pf);
@@ -1012,7 +1040,7 @@ void uninit_game() {
 		}
 		
 		log2file(" saving highscores");
-		pf = pack_fopen("alex4.hi", "wp");
+		pf = pack_fopen(alex4_hi, "wp");
 		if (pf) {
 			save_hisc_table(hisc_table, pf);
 			save_hisc_table(hisc_table_space, pf);
@@ -2893,7 +2921,7 @@ int do_main_menu() {
 
 				// save options
 				log2file(" saving options");
-				pf = pack_fopen("alex4.sav", "wp");
+				pf = pack_fopen(alex4_sav, "wp");
 				if (pf) {
 					save_options(&options, pf);
 					pack_fclose(pf);
@@ -3001,7 +3029,7 @@ int main(int argc, char **argv) {
 
 
 	// start logfile
-	fp = fopen("log.txt", "wt");
+	fp = fopen(log_txt, "wt");
 	if (fp) {
 		fprintf(fp, "Alex 4 (%s) - log file\n-------------------\n", GAME_VERSION_STR);
 		fclose(fp);
