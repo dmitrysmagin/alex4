@@ -349,6 +349,7 @@ void fade_rest(int msec, AL_DUH_PLAYER *duh_player) {
 
 // fades in from white to 4 color palette
 void fade_in_pal(int delay) {
+#if 0
 	set_color(1, &org_pal[3]);	
 	fade_rest(delay, dp);
 
@@ -360,11 +361,13 @@ void fade_in_pal(int delay) {
 	set_color(2, &org_pal[2]);	
 	set_color(3, &org_pal[3]);	
 	fade_rest(delay, dp);
+#endif
 }
 
 
 // fades 4 color palette to white
 void fade_out_pal(int delay) {
+#if 0
 	set_color(1, &org_pal[2]);	
 	set_color(2, &org_pal[3]);	
 	set_color(3, &org_pal[4]);	
@@ -374,6 +377,7 @@ void fade_out_pal(int delay) {
 	fade_rest(delay, dp);
 	set_color(1, &org_pal[4]);	
 	fade_rest(delay, dp);
+#endif
 }
 
 
