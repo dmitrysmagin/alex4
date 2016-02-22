@@ -1,3 +1,6 @@
 *.exe
 *.dll
 *.o
+*.opk
+extras
+alex4
