@@ -100,7 +100,6 @@ void esc_rest(int millis) {
 	int count = 0;
 	while(count < clicks && !key[KEY_ESC]) {
 		cycle_count = 0;
-		poll_music();
 		count ++;
 		while(!cycle_count);
 		yield_timeslice();
@@ -500,8 +499,6 @@ void cmd_run(Ttoken *t) {
 
 		while(cycle_count > 0 && loops && !script_done) {
 			logic_count ++;
-
-			poll_music();
 
 			// update objects
 			o = objects;

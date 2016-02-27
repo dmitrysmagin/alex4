@@ -280,12 +280,6 @@ void msg_box(char *str) {
 	if (got_sound) al_resume_duh(dp);
 }
 
-// polls the music
-void poll_music() {
-	if (got_sound && dp != NULL) al_poll_duh(dp);
-}
-
-
 // waits for user to strike a key, or x seconds
 void wait_key(int seconds) {
 	int t = 0;
@@ -299,7 +293,6 @@ void wait_key(int seconds) {
 		t ++;
 		if (keypressed()) kp = 1;
 		if (is_fire(&ctrl) || is_jump(&ctrl)) kp = 1;
-		if (got_sound && dp != NULL) al_poll_duh(dp);
 		while(!cycle_count);
 	}
 }
@@ -310,10 +303,24 @@ Tactor *get_alex() {
 	return &actor[0];
 }
 
+static volatile int sem = 0;
+
+static void timer_poll_duh(void) {
+	sem++;
+	if (got_sound && dp)
+		al_poll_duh(dp);
+	sem--;
+}
+
 // stops any mod playing
 static void stop_music(void) {
-	al_stop_duh(dp);
-	dp = NULL;
+	if (dp) {
+		AL_DUH_PLAYER *p = dp;
+		remove_int(timer_poll_duh);
+		dp = NULL;
+		while (sem) yield_timeslice();
+		al_stop_duh(p);
+	}
 }
 
 
@@ -323,13 +330,14 @@ static void start_music(int startorder) {
 
 	stop_music();
 
-	{
+	if (!dp) {
 		sr = dumb_it_start_at_order(duh, n_channels, startorder);
 		dp = al_duh_encapsulate_sigrenderer(sr,
 			((float)(get_config_int("sound", "music_volume", 255)) / 255.0),
 			get_config_int("dumb", "buffer_size", 4096),
 			get_config_int("dumb", "sound_freq", 44100));
 		if (!dp) duh_end_sigrenderer(sr); // howto.txt doesn't mention that this is necessary! dumb.txt does ...
+		else install_int_ex(timer_poll_duh, BPS_TO_TIMER(240));
 	}
 }
 
@@ -340,7 +348,6 @@ void fade_rest(int msec, AL_DUH_PLAYER *duh_player) {
 
 	while(i < msec / 20) {
 		cycle_count = 0;
-		if (got_sound && duh_player != NULL) al_poll_duh(duh_player);
 		i ++;
 		while(!cycle_count)	yield_timeslice();
 	}
@@ -1127,9 +1134,6 @@ void show_lets_go() {
 		while(cycle_count > 0) {
 			logic_count ++;
 
-			// poll music machine
-			if (got_sound) al_poll_duh(dp);
-
 			// move text
 			if (mode == 0 || mode == 2) x += 4;
 			if (x >= 80 - go->w/2) mode = 1;
@@ -1173,9 +1177,6 @@ void show_game_over() {
 		// do logic
 		while(cycle_count > 0) {
 			logic_count ++;
-
-			// poll music machine
-			if (got_sound) al_poll_duh(dp);
 
 			// move text
 			if (mode == 0 || mode == 2) x += 4;
@@ -1237,9 +1238,6 @@ void show_custom_ending() {
 		while(cycle_count > 0) {
 			logic_count ++;
 
-			// poll music machine
-			if (got_sound) al_poll_duh(dp);
-
 			// poll user
 			poll_control(&ctrl);
 			if (is_fire(&ctrl) || is_jump(&ctrl) || key[KEY_SPACE] || key[KEY_ENTER] || key[KEY_ESC]) 
@@ -1272,7 +1270,6 @@ void transform_bitmap(BITMAP *bmp, int steps) {
 			c = _getpixel(bmp, x, y);
 			_putpixel(bmp, x, y, MIN(MAX(c + steps, 1), 4));
 		}
-		if (got_sound) al_poll_duh(dp);
 	}
 }
 
@@ -1335,9 +1332,6 @@ void show_cutscene(int level) {
 			logic_count ++;
 			my_counter ++;
 			poll_control(&ctrl);
-
-			// poll music machine
-			if (got_sound) al_poll_duh(dp);
 
 			if ((mode == 1 && (keypressed() || is_fire(&ctrl) || is_jump(&ctrl))) || my_counter > 200) {
 				mode = 2;
@@ -1421,7 +1415,6 @@ void show_scores(int space, Thisc *table) {
 	poll_control(&ctrl);
 	while(!is_jump(&ctrl) && !keypressed()) {
 		poll_control(&ctrl);
-		if (got_sound) al_poll_duh(dp);
 	}
 	play_sound(sfx[SMPL_MENU]);
 
@@ -1487,9 +1480,6 @@ int select_starting_level() {
 		// do logic
 		while(cycle_count > 0) {
 			logic_count ++;
-
-			// poll music machine
-			if (got_sound) al_poll_duh(dp);
 
 			// check controls
 			poll_control(&ctrl);
@@ -2334,7 +2324,6 @@ int do_pause_menu(BITMAP *bg) {
 	// wait for user input
 	clear_keybuf();
 	while(!done) {
-		if (got_sound) al_poll_duh(dp);
 		poll_control(&ctrl);
 		if (is_fire(&ctrl) || is_jump(&ctrl)) done = 1;
 		if (keypressed()) done = 1;
@@ -2369,11 +2358,6 @@ int play(int level) {
 		//  do logic
 		while(cycle_count > 0) {
 			logic_count ++;
-
-			// poll music machine
-			if (got_sound) {
-				al_poll_duh(dp);
-			}
 
 			// check if user wants to enter edit mode
 			if (!playing_original_game && !editing) {
@@ -2481,7 +2465,6 @@ int play(int level) {
 			}
 			if (key[KEY_F12]) {
 				take_screenshot(swap_screen);
-				while(key[KEY_F12])	if (got_sound) al_poll_duh(dp);
 				cycle_count = 0;
 			}
 			
@@ -2694,9 +2677,6 @@ int do_main_menu() {
 		while(cycle_count > 0) {
 			logic_count ++;
 			tick ++;
-
-			// poll music
-			if (got_sound) al_poll_duh(dp);
 
 			scroll_scroller(&hscroll, -1);
 			if (!scroller_is_visible(&hscroll)) restart_scroller(&hscroll);

@@ -306,11 +306,24 @@ int s_check_pp_collision(BITMAP *spr1, BITMAP *spr2, int x1, int y1, int x2, int
 
 //////////// END PPCOL
 
+static volatile int sem = 0;
+
+static void timer_poll_duh(void) {
+	sem++;
+	if (s_got_sound && s_dp)
+		al_poll_duh(s_dp);
+	sem--;
+}
 
 // stops any mod playing
 static void s_stop_music(void) {
-	al_stop_duh(s_dp);
-	s_dp = NULL;
+	if (s_dp) {
+		AL_DUH_PLAYER *p = s_dp;
+		remove_int(timer_poll_duh);
+		s_dp = NULL;
+		while (sem) yield_timeslice();
+		al_stop_duh(p);
+	}
 }
 
 
@@ -320,7 +333,7 @@ static void s_start_music(int startorder) {
 
 	s_stop_music();
 
-	{
+	if (!s_dp) {
 		s_music_vol = (float)(get_config_int("sound", "music_volume", 255)) / 255.0;
 		s_sr = dumb_it_start_at_order(s_duh, n_channels, startorder);
 		s_dp = al_duh_encapsulate_sigrenderer(s_sr, 
@@ -328,6 +341,7 @@ static void s_start_music(int startorder) {
 			get_config_int("dumb", "buffer_size", 4096),
 			get_config_int("dumb", "sound_freq", 44100));
 		if (!s_dp) duh_end_sigrenderer(s_sr); // howto.txt doesn't mention that this is necessary! dumb.txt does ...
+		else install_int_ex(timer_poll_duh, BPS_TO_TIMER(240));
 	}
 }
 
@@ -1143,7 +1157,6 @@ void s_run_shooter() {
 					s_music_vol = s_music_vol * 0.98;
 					al_duh_set_volume(s_dp, s_music_vol);
 				}
-				al_poll_duh(s_dp);
 			}
 
 			// move stars
