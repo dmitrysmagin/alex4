@@ -101,8 +101,8 @@ void esc_rest(int millis) {
 	while(count < clicks && !key[KEY_ESC]) {
 		cycle_count = 0;
 		count ++;
-		while(!cycle_count);
-		yield_timeslice();
+		while(!cycle_count)
+			synchronize_us();
 	}
     if (key[KEY_ESC]) script_done = -1;
 }
@@ -518,7 +518,7 @@ void cmd_run(Ttoken *t) {
 		}
 
 		// let other processes play
-		yield_timeslice();
+		synchronize_us();
 
 		// blit buffer to swap buffer
 		blit(buffer, swap_buffer, 0, 0, 0, 0, 160, 120);

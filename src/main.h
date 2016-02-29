@@ -86,7 +86,7 @@ BITMAP *get_gameover_sign();
 BITMAP *get_letsgo_sign();
 Thisc *get_space_hisc();
 void show_scores(int space, Thisc *table);
-
+void synchronize_us();
 
 // a little bounding box quickie
 #define check_bb_collision(x1,y1,w1,h1,x2,y2,w2,h2) (!( ((x1)>=(x2)+(w2)) || ((x2)>=(x1)+(w1)) || \

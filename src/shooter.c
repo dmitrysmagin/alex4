@@ -1282,7 +1282,7 @@ void s_run_shooter() {
 		
 		
 		// let other processes play
-		yield_timeslice();
+		synchronize_us();
 		
 		// draw 
 		frame_count ++;

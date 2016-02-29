@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/time.h>
 #include <errno.h>
 #include <allegro.h>
 #include <aldumb.h>
@@ -145,7 +146,43 @@ int menu_choice = 1;
 int playing_original_game = 1;
 int init_ok = 0;
 
+// Timer routines
+static long long start_us = 0;
+static int frame_count_us = 0, skipped_frames = 0;
 
+static long long get_ticks_us() {
+	struct timeval current_time;
+	gettimeofday(&current_time, NULL);
+
+	return (long long)current_time.tv_sec * 1000000 + (long long)current_time.tv_usec;
+}
+
+static void sleep_us(int value) {
+	usleep(value);
+}
+
+void synchronize_us() {
+	long long now_us;
+	long long lim, wait;
+
+	if (!start_us)
+		start_us = get_ticks_us();
+
+	now_us = get_ticks_us();
+	frame_count_us++;
+	if(now_us - start_us >= 1000000) {
+		start_us = now_us;
+		//fps = frame_limit - skipped_frames;
+		skipped_frames = 0;
+		frame_count_us = 0;
+	}
+
+	lim = frame_count_us * 16667; // frametime
+
+	wait = lim - (now_us - start_us);
+	if (wait > 0)
+		sleep_us(wait);
+}
 
 // // // // // // // // // // // // // // // // // // // // // 
 
@@ -293,7 +330,8 @@ void wait_key(int seconds) {
 		t ++;
 		if (keypressed()) kp = 1;
 		if (is_fire(&ctrl) || is_jump(&ctrl)) kp = 1;
-		while(!cycle_count);
+		while(!cycle_count)
+			synchronize_us();;
 	}
 }
 
@@ -350,7 +388,8 @@ void fade_rest(int msec, AL_DUH_PLAYER *duh_player) {
 	while(i < msec / 20) {
 		cycle_count = 0;
 		i ++;
-		while(!cycle_count)	yield_timeslice();
+		while(!cycle_count)
+			synchronize_us();
 	}
 }
 
@@ -1150,7 +1189,7 @@ void show_lets_go() {
 		}
 
 		// let other processes play
-		yield_timeslice();
+		synchronize_us();
 
 		// draw stuff
 		draw_frame(swap_screen, 1);
@@ -1189,7 +1228,7 @@ void show_game_over() {
 		}
 
 		// let other processes play
-		yield_timeslice();
+		synchronize_us();
 
 		// draw stuff
 		draw_frame(swap_screen, 1);
@@ -1248,7 +1287,7 @@ void show_custom_ending() {
 		}
 
 		// let other processes play
-		yield_timeslice();
+		synchronize_us();
 
 		// draw stuff
 		draw_custom_ending(swap_screen);
@@ -1360,7 +1399,7 @@ void show_cutscene(int level) {
 		}
 
 		// let other processes play
-		yield_timeslice();
+		synchronize_us();
 
 		// draw stuff
 		blit(swap2, swap_screen, 0, 0, 0, 0, 160, 120);
@@ -1412,6 +1451,7 @@ void show_scores(int space, Thisc *table) {
 	poll_control(&ctrl);
 	while(!is_jump(&ctrl) && !keypressed()) {
 		poll_control(&ctrl);
+		synchronize_us();
 	}
 	play_sound(sfx[SMPL_MENU]);
 
@@ -1517,6 +1557,8 @@ int select_starting_level() {
 			// move on
 			cycle_count --;
 		}
+
+		synchronize_us();
 
 		// draw stuff
 		if (start_level >= 0) {
@@ -2325,7 +2367,7 @@ int do_pause_menu(BITMAP *bg) {
 		if (is_fire(&ctrl) || is_jump(&ctrl)) done = 1;
 		if (keypressed()) done = 1;
 		if (key[KEY_ESC]) done = -1;
-		yield_timeslice();
+		synchronize_us();
 	}
 
 	if (done == -1) {
@@ -2469,7 +2511,7 @@ int play(int level) {
 		}
 		
 		// let other processes play
-		yield_timeslice();
+		synchronize_us();
 
 		// draw 
 		frame_count ++;
@@ -2634,7 +2676,8 @@ int get_string(BITMAP *bmp, char *string, int max_size, FONT *f, int pos_x, int 
 
 		}
 
-		while(!cycle_count);
+		while(!cycle_count)
+			synchronize_us();
 
     }
 }
@@ -2748,7 +2791,7 @@ int do_main_menu() {
 		}
 
 		// let other processes play
-		yield_timeslice();
+		synchronize_us();
 
 		// draw 
 		frame_count ++;
@@ -2983,7 +3026,8 @@ int do_main_menu() {
 		blit_to_screen(swap_screen);
 		fade_in_pal(100);
 		cycle_count = 0;
-		while(!key[KEY_ESC] && cycle_count < 200);
+		while(!key[KEY_ESC] && cycle_count < 200)
+			synchronize_us();
 		fade_out_pal(100);
 		clear(screen);
 	}
