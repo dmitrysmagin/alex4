@@ -10,7 +10,7 @@ CC = mipsel-linux-gcc
 #CC = gcc
 
 CFLAGS = -g -O2 -Wall -Wno-deprecated-declarations
-LDFLAGS = -lm `allegro-config --libs` -laldmb -ldumb
+LDFLAGS = `allegro-config --libs` -laldmb -ldumb -lm
 
 OBJ = \
 	src/actor.o src/bullet.o src/control.o src/edit.o src/hisc.o \
