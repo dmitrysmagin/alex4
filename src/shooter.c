@@ -341,7 +341,7 @@ static void s_start_music(int startorder) {
 			get_config_int("dumb", "buffer_size", 4096),
 			get_config_int("dumb", "sound_freq", 44100));
 		if (!s_dp) duh_end_sigrenderer(s_sr); // howto.txt doesn't mention that this is necessary! dumb.txt does ...
-		else install_int_ex(timer_poll_duh, BPS_TO_TIMER(240));
+		else install_int_ex(timer_poll_duh, BPS_TO_TIMER(30));
 	}
 }
 
